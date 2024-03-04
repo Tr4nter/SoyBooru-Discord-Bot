@@ -27,7 +27,7 @@ class Navigator(discord.ui.View):
         return True
 
 
-    async def on_error(interaction: discord.Interaction, error: Exception):
+    async def on_error(self, interaction: discord.Interaction, error: Exception):
         await interaction.reply(error)
 
     

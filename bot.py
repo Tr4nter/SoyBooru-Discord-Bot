@@ -113,5 +113,6 @@ async def keyword_autocomplete(
         return options[:25]
     except Exception as e: print(traceback.format_exc())
 
-bot.run(Config.get("MAIN", "TOKEN"))
+if __name__ == "__main__":
+    bot.run(Config.get("MAIN", "TOKEN"))
 
