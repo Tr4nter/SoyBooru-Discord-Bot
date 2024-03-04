@@ -1,2 +1,4 @@
 testfile.py
 TEST_CONSTANTS.py
+__pycache__/
+__pycache__
