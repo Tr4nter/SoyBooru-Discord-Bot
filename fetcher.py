@@ -27,6 +27,6 @@ async def fetch_media(keyword: str, page: int) -> dict:
         mediaLink = BASE_ADDRESS+"/_images/"+mediaId
         mediaLinkForEmbed = mediaLink+f".{mediaRef['data-mime'].split('/')[1]}"
 
-        if mediaLinkForEmbed.split(".")[-1] in VIDEO_EXTENSIONS: continue
+        if mediaLinkForEmbed.split(".")[-1] in VIDEO_EXTENSIONS: continue # skip video formats due to discord not supporting putting videos in embed
         mediaLinks.append({"origin": BASE_ADDRESS+mediaRef["href"], "media": mediaLinkForEmbed, "media_tags": mediaRef["data-tags"]}) #discord embed requires extension at the end of the an url for the content to be displayed
     return {"mediaLinks": mediaLinks, "maxPage": maxPage}
