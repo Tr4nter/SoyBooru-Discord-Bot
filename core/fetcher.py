@@ -5,7 +5,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 executor = ProcessPoolExecutor(2)
 
-from CONSTANTS import *
+from core.CONSTANTS import *
 
 def fetch_page_data(page_content: str, page: int):
     soupObject = BeautifulSoup(page_content, "lxml")

@@ -10,10 +10,10 @@ import configparser
 import traceback
 import time
 
-from navigator import Navigator
-from fetcher import fetch_media
-from Trie import Trie
-from CONSTANTS import *
+from core.navigator import Navigator
+from core.fetcher import fetch_media
+from core.Trie import Trie
+from core.CONSTANTS import *
 
 #fix for bs4 errors https://stackoverflow.com/questions/69515086/error-attributeerror-collections-has-no-attribute-callable-using-beautifu
 import collections
