@@ -3,64 +3,44 @@ from discord.ext import commands, tasks
 from discord import app_commands
 
 import aiohttp
+import httpx
 from bs4 import BeautifulSoup, SoupStrainer
 
 import typing
 import configparser
-import traceback
-import time
 
 from navigator import Navigator
-from fetcher import fetch_media
-from Trie import Trie
 from CONSTANTS import *
+from fetcher import fetch_media
 
 #fix for bs4 errors https://stackoverflow.com/questions/69515086/error-attributeerror-collections-has-no-attribute-callable-using-beautifu
 import collections
 collections.Callable = collections.abc.Callable
 
-Config = configparser.ConfigParser()
-Config.read("config.ini")
-
-GUILD_SYNC_ID = int(Config.get("MAIN", "GUILD_SYNC_ID"))
-
 class Bot(commands.Bot):
     def __init__(self):
         intents =  discord.Intents.all()
-
-        self.tags = Trie()
-        self.lastTagFetch = time.time()
-
-        self.frontFacingTags = [] # tags to show when keyword box is empty
+        self.tags = {}
         
         super().__init__(command_prefix="t.", intents=intents)
 
-
     @tasks.loop(minutes=30)
     async def looper(self):
-        if (time.time())-self.lastTagFetch >= 30*60:
-            await self.fetch_tags()
+        await self.fetch_tags()
         
 
     async def fetch_tags(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{BASE_ADDRESS}/tags") as resp:
-                tagSite = await resp.text()
-        try:
-            tagSoup = BeautifulSoup(tagSite, 'lxml')
-            tagSection = tagSoup.find("section", {"id": "Tagsmain"})
-            tagDiv = tagSection.find("div", {"class": "navside tab"})
-            tags = tagDiv.find_all("a")
-        except AttributeError: return self.fetch_tags()
+        tagSite = httpx.get(f"{BASE_ADDRESS}/tags").text
+        tagSoup = BeautifulSoup(tagSite, 'lxml')
+        tagSection = tagSoup.find("section", {"id": "Tagsmain"})
+        tagDiv = tagSection.find("div", {"class": "navside tab"})
 
-        for tag in tags:
+        for tag in tagDiv.find_all("a"):
             tagText = tag.getText().replace(" ", "_")
 
-            self.tags.insert(tagText)
+            if self.tags.get(tagText): continue
+            self.tags[tagText] = 0 # dict lookup is faster then checking if entry is in list ( maybe )
 
-            if len(self.frontFacingTags) < 10:
-                self.frontFacingTags.append(tagText)
-        self.lastTagFetch = time.time()
 
     async def setup_hook(self):
         await self.tree.sync(guild=discord.Object(id = GUILD_SYNC_ID))
@@ -78,6 +58,16 @@ class Bot(commands.Bot):
         
 bot = Bot()
 
+@bot.event
+async def on_message(message: discord.Message):
+    mentions = message.mentions
+    if len(mentions) >= MENTION_THRESHOLD:
+        author = message.author
+        role = message.guild.get_role(RETARDROLE_ID)
+        await bot.add_roles(author, role)
+        await message.channel.send(f"Muted {author.mention} for mass-mentions.")
+    await bot.process_commands(message)
+
 
 @bot.hybrid_command(name="booru", with_app_command=True, description="Lookup booru.soy images")
 @app_commands.guilds(discord.Object(id = GUILD_SYNC_ID))
@@ -93,7 +83,6 @@ async def booru(ctx: commands.Context, keyword: str, page: int = 1) -> None:
     await Navigator(ctx, mediaLinks, maxPage, keyword).send(message)
 
 
-# Sometimes this doesn't work, couldnt figure out why, could be ratelimits?
 @booru.autocomplete("keyword")
 async def keyword_autocomplete(
     interaction: discord.Interaction, 
@@ -101,13 +90,14 @@ async def keyword_autocomplete(
 ) -> typing.List[app_commands.Choice[str]]:
     
     options = []
-    if len(current) <= 0: return []
-    try:
-        for word in bot.tags.search_autocompletion(current, interaction): 
-            options.append(app_commands.Choice(name=word, value=word))
-            if len(options) >= 25: break # discord only supports up to 25 options at once, any more and it wont show any
-        return options[:25]
-    except Exception as e: print(traceback.format_exc())
+    for word in bot.tags:
+        if not current in word: continue
+        options.append(app_commands.Choice(name=word, value=word))
+    return options[:25] # discord only supports up to 25 options at once, any more and it wont show any
 
-bot.run(Config.get("MAIN", "TOKEN"))
+Config = configparser.ConfigParser()
+Config.read("config.ini")
 
+TOKEN = Config.get("MAIN", "TOKEN")
+
+bot.run(TOKEN)

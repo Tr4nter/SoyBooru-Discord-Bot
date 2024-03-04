@@ -2,7 +2,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 from CONSTANTS import *
 
-async def fetch_media(keyword: str, page: int) -> tuple:
+async def fetch_media(keyword: str, page: int) -> dict:
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{BASE_ADDRESS}/post/list/{keyword}/{page}") as resp:
             booruImagePage = await resp.text()
