@@ -62,6 +62,7 @@ class Bot(commands.Bot):
                 self.frontFacingTags.append(tagText)
         self.lastTagFetch = time.time()
 
+
     async def setup_hook(self):
         await self.tree.sync(guild=discord.Object(id = GUILD_SYNC_ID))
         await self.fetch_tags()
@@ -73,6 +74,7 @@ class Bot(commands.Bot):
         
     async def on_ready(self):
         await bot.change_presence(activity=discord.CustomActivity(name=f"Prefix: {self.command_prefix}"))
+        print("bot is ready")
         self.looper.start()
 
         
@@ -92,7 +94,7 @@ async def booru(ctx: commands.Context, keyword: str, page: int = 1) -> None:
     mediaLinks = mediaData["mediaLinks"]
     maxPage = mediaData["maxPage"]
 
-    await Navigator(ctx, mediaLinks, maxPage, keyword).send(message)
+    await Navigator(ctx, mediaLinks, page, maxPage, keyword).send(message)
 
 
 # Sometimes this doesn't work, couldnt figure out why, could be ratelimits?
@@ -105,7 +107,7 @@ async def keyword_autocomplete(
     options = []
     if len(current) <= 0: return [app_commands.Choice(name=word, value=word) for word in bot.frontFacingTags]
     try:
-        for word in bot.tags.search_autocompletion(current, interaction): 
+        for word in (await bot.tags.search_autocompletion(current, interaction)): 
             options.append(app_commands.Choice(name=word, value=word))
             if len(options) >= 25: break # discord only supports up to 25 options at once, any more and it wont show any
         return options[:25]

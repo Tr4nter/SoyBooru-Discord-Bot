@@ -5,7 +5,7 @@ from fetcher import fetch_media
 
 
 class Navigator(discord.ui.View):
-    def __init__(self, context: commands.Context, medias: typing.List[str], maxPage: int, keyword: str):
+    def __init__(self, context: commands.Context, medias: typing.List[str], page:int, maxPage: int, keyword: str):
         self.context = context
 
         self.keyword = keyword
@@ -13,8 +13,10 @@ class Navigator(discord.ui.View):
         self.maxPage = maxPage
 
         self.currentIndex = 0
-        self.currentPage = 0
+        self.currentPage = page-1
         self.sent = False
+
+        self.embed = discord.Embed()
 
         self._currentMessage = None
         super().__init__(timeout=600)
@@ -37,12 +39,11 @@ class Navigator(discord.ui.View):
 
         
     async def _make_embed(self):
-        embed = discord.Embed()    
         currentMediaData = self.medias[self.currentIndex]
-        embed.set_image(url=currentMediaData["media"])
-        embed.description =  currentMediaData["origin"]+"\n"+currentMediaData["media_tags"]
-        embed.title = f"Media: {self.currentIndex+1}/{len(self.medias)}\nPage: {self.currentPage+1}/{self.maxPage}"
-        return embed
+        self.embed.set_image(url=currentMediaData["media"])
+        self.embed.description =  currentMediaData["origin"]+"\n"+currentMediaData["media_tags"]
+        self.embed.title = f"Media: {self.currentIndex+1}/{len(self.medias)}\nPage: {self.currentPage+1}/{self.maxPage}"
+        return self.embed
 
 
     async def _edit(self, interaction: discord.Interaction):
