@@ -29,7 +29,6 @@ class Trie:
         for char, node in beginSearchNode.children.items():
             if interaction.is_expired(): return result
             result = result+self._recusive_search(node, interaction, current+char)
-            print(time.time())
         return result 
 
             
@@ -40,6 +39,5 @@ class Trie:
                 return []
 
             lastCharRoot = lastCharRoot.children.get(key[level])
-        result = self._recusive_search(lastCharRoot, interaction, key)
-        if lastCharRoot.terminal: result.append(key)
-        return result
+        return self._recusive_search(lastCharRoot, interaction, key)
+

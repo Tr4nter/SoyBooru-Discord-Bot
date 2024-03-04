@@ -58,7 +58,7 @@ class Bot(commands.Bot):
 
             self.tags.insert(tagText)
 
-            if len(self.frontFacingTags) < 10:
+            if len(self.frontFacingTags) < 25:
                 self.frontFacingTags.append(tagText)
         self.lastTagFetch = time.time()
 
@@ -101,7 +101,7 @@ async def keyword_autocomplete(
 ) -> typing.List[app_commands.Choice[str]]:
     
     options = []
-    if len(current) <= 0: return []
+    if len(current) <= 0: return [app_commands.Choice(name=word, value=word) for word in bot.frontFacingTags]
     try:
         for word in bot.tags.search_autocompletion(current, interaction): 
             options.append(app_commands.Choice(name=word, value=word))
