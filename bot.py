@@ -84,7 +84,9 @@ bot = Bot()
 async def booru(ctx: commands.Context, keyword: str, page: int = 1) -> None:
     await ctx.defer()
     message = await ctx.reply(f"*Fetching medias for {keyword}...*")
-    mediaData = await fetch_media(keyword, page)
+    try:
+        mediaData = await fetch_media(keyword, page)
+    except Exception as e: print(e)
     if not mediaData: await ctx.reply(f"Unable to find medias for keyword: *{keyword}*"); return
 
     mediaLinks = mediaData["mediaLinks"]
