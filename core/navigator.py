@@ -27,8 +27,8 @@ class Navigator(discord.ui.View):
         return True
 
 
-    async def on_error(self, interaction: discord.Interaction, error: Exception):
-        await interaction.reply(error)
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item):
+        await interaction.reply(error, item)
 
     
     async def send(self, messageToEdit: discord.Message):
